@@ -22,7 +22,7 @@ client = discord.Client(intents=intents)
 kaguya = Kaguya()
 
 # --- RATE LIMIT CONFIGURATION ---
-MAX_RPM = 5           # Maximum requests allowed per minute (Adjust based on your Gemini tier)
+MAX_RPM = 3           # Maximum requests allowed per minute (Adjust based on your Gemini tier)
 request_history = []  # Stores timestamps of recent API calls
 
 def is_rate_limited() -> bool:
@@ -94,20 +94,17 @@ async def on_message(message):
         await message.channel.send("*Smiles*")
         return
 
-    # --- RATE LIMIT CHECK ---
-    if is_rate_limited():
-        # Inform the user without calling the Gemini API
-        await message.channel.send("⏱️ *Hold on! I'm processing too many cosmic requests right now. Please slow down a bit!*")
-        return
-    # ------------------------
+    # --- FIXED RATE LIMIT CHECK ---
+    if is_mentioned:
+        if is_rate_limited():
+            await message.channel.send(
+                "⏱️ *Hold on! Kaguya is handling too many requests right now. Please slow down a bit!*"
+            )
+            return
 
-    print(f"Message from {message.author}: {clean_content}")
-    
-    if not clean_content:
-        clean_content = "Hello!"
-
-    response = await kaguya.respond(clean_content)
-    await message.channel.send(response)
+        print(f"Message from {message.author}: {clean_content}")
+        response = await kaguya.respond(clean_content)
+        await message.channel.send(response)
 
 @client.event
 async def on_reaction_add(reaction, user):
